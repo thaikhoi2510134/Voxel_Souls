@@ -1,0 +1,25 @@
+# Ensure consistent line endings across macOS and Windows
+* text=auto
+
+# C# and Python scripts normalized to LF
+*.cs text eol=lf
+*.shader text eol=lf
+*.cginc text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+
+# Unity YAML files
+*.unity text eol=lf
+*.prefab text eol=lf
+*.mat text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+
+# Binary files
+*.fbx binary
+*.blend binary
+*.png binary
+*.jpg binary
+*.wav binary
+*.mp3 binary
