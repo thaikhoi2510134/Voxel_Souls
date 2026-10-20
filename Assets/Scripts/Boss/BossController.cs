@@ -84,7 +84,7 @@ namespace VoxelSouls.Boss
             {
                 visuals.BuildBossVoxelMesh();
             }
-            _player = FindObjectOfType<Player.PlayerCombat>();
+            _player = FindFirstObjectByType<Player.PlayerCombat>();
         }
 
         private void Update()

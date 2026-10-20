@@ -39,13 +39,13 @@ namespace VoxelSouls.Camera
         {
             if (playerTarget == null)
             {
-                Player.PlayerController pc = FindObjectOfType<Player.PlayerController>();
+                Player.PlayerController pc = FindFirstObjectByType<Player.PlayerController>();
                 if (pc != null) playerTarget = pc.transform;
             }
 
             if (bossTarget == null)
             {
-                Boss.BossController bc = FindObjectOfType<Boss.BossController>();
+                Boss.BossController bc = FindFirstObjectByType<Boss.BossController>();
                 if (bc != null) bossTarget = bc.transform;
             }
         }

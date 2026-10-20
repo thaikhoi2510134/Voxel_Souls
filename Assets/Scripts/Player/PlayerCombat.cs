@@ -114,7 +114,7 @@ namespace VoxelSouls.Player
             if (Input.GetMouseButtonDown(0) && _attackCooldownTimer <= 0f && !_controller.IsRolling && !_stats.isPostureBroken)
             {
                 // Kiểm tra xem Boss có đang bị Phá Thế (Posture Broken) để tung ĐÒN KẾT LIỄU (Deathblow) không!
-                Boss.BossController boss = FindObjectOfType<Boss.BossController>();
+                Boss.BossController boss = FindFirstObjectByType<Boss.BossController>();
                 if (boss != null && !boss.Stats.IsDead && boss.Stats.isPostureBroken)
                 {
                     float dist = Vector3.Distance(transform.position, boss.transform.position);

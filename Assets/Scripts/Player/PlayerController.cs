@@ -73,7 +73,7 @@ namespace VoxelSouls.Player
 
             if (lockOnTarget == null)
             {
-                Boss.BossController boss = FindObjectOfType<Boss.BossController>();
+                Boss.BossController boss = FindFirstObjectByType<Boss.BossController>();
                 if (boss != null)
                     lockOnTarget = boss.transform;
             }

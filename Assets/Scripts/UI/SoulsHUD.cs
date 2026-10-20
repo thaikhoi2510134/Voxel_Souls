@@ -41,11 +41,11 @@ namespace VoxelSouls.UI
         private void FindReferences()
         {
             if (_playerCombat == null)
-                _playerCombat = FindObjectOfType<PlayerCombat>();
+                _playerCombat = FindFirstObjectByType<PlayerCombat>();
             if (_playerController == null && _playerCombat != null)
                 _playerController = _playerCombat.GetComponent<PlayerController>();
             if (_boss == null)
-                _boss = FindObjectOfType<BossController>();
+                _boss = FindFirstObjectByType<BossController>();
         }
 
         private void OnGUI()
@@ -283,7 +283,7 @@ namespace VoxelSouls.UI
             }
 
             // 2. Hiển thị nhãn Vật Phẩm RPG khi đứng gần
-            WorldItemPickup[] pickups = FindObjectsOfType<WorldItemPickup>();
+            WorldItemPickup[] pickups = FindObjectsByType<WorldItemPickup>(FindObjectsSortMode.None);
             foreach (var item in pickups)
             {
                 if (item.isConsumed) continue;

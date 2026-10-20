@@ -18,7 +18,7 @@ namespace VoxelSouls.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoBootstrapOnPlay()
         {
-            if (Object.FindObjectOfType<GameManager>() == null && Object.FindObjectOfType<PlayerController>() == null)
+            if (Object.FindFirstObjectByType<GameManager>() == null && Object.FindFirstObjectByType<PlayerController>() == null)
             {
                 Debug.Log("[VoxelSouls] Phát hiện Scene trống khi bấm Play — Tự động khởi tạo toàn bộ Thế Giới & Nhân Vật!");
                 BuildCompletePlayableScene();
@@ -28,7 +28,7 @@ namespace VoxelSouls.Core
         public static void BuildCompletePlayableScene()
         {
             // 1. Khởi tạo GameManager & Giao diện SoulsHUD (Elden Ring + Sekiro UI)
-            GameManager existingGm = Object.FindObjectOfType<GameManager>();
+            GameManager existingGm = Object.FindFirstObjectByType<GameManager>();
             if (existingGm == null)
             {
                 GameObject gmObj = new GameObject("GameManager_SoulsHUD");
@@ -40,7 +40,7 @@ namespace VoxelSouls.Core
             SetupLighting();
 
             // 3. Khởi tạo Thế Giới Nhỏ & Đấu Trường Hắc Thạch
-            ArenaGenerator existingArena = Object.FindObjectOfType<ArenaGenerator>();
+            ArenaGenerator existingArena = Object.FindFirstObjectByType<ArenaGenerator>();
             if (existingArena == null)
             {
                 GameObject worldObj = new GameObject("FantasyVoxelWorld");
@@ -49,7 +49,7 @@ namespace VoxelSouls.Core
             existingArena.BuildFantasyWorld();
 
             // 4. Khởi tạo Boss Đầu Tiên: "HỘ VỆ HẮC THẠCH (OBSIDIAN WARDEN)"
-            BossController boss = Object.FindObjectOfType<BossController>();
+            BossController boss = Object.FindFirstObjectByType<BossController>();
             if (boss == null)
             {
                 GameObject bossObj = new GameObject("Boss_ObsidianWarden");
@@ -70,7 +70,7 @@ namespace VoxelSouls.Core
             }
 
             // 5. Khởi tạo Nhân Vật Chính: "DŨNG SĨ CỔ NGỮ (VOXEL KNIGHT)"
-            PlayerController player = Object.FindObjectOfType<PlayerController>();
+            PlayerController player = Object.FindFirstObjectByType<PlayerController>();
             if (player == null)
             {
                 GameObject heroObj = new GameObject("Hero_VoxelKnight");
@@ -122,7 +122,7 @@ namespace VoxelSouls.Core
 
         private static void SetupLighting()
         {
-            Light dirLight = Object.FindObjectOfType<Light>();
+            Light dirLight = Object.FindFirstObjectByType<Light>();
             if (dirLight == null)
             {
                 GameObject lightObj = new GameObject("Directional Light");

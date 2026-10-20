@@ -36,7 +36,7 @@ namespace VoxelSouls.World
                 floatingVisual.Rotate(0f, 75f * Time.deltaTime, 0f, Space.World);
             }
 
-            PlayerCombat player = FindObjectOfType<PlayerCombat>();
+            PlayerCombat player = FindFirstObjectByType<PlayerCombat>();
             if (player == null || player.Stats.IsDead) return;
 
             float dist = Vector3.Distance(transform.position, player.transform.position);
