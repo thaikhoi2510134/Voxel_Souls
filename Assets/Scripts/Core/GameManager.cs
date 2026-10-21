@@ -26,6 +26,7 @@ namespace VoxelSouls.Core
     /// <summary>
     /// Quản lý trạng thái trận đấu, hiệu ứng Hitstop / Slow-Motion chuẩn Sekiro khi Parry hoặc Kết Liễu,
     /// hiệu ứng tia lửa va chạm kiếm và thông báo nổi trên màn hình.
+    /// Đã sửa lỗi kẹt bảng giới thiệu (Banner tự động mờ dần sau 2.0 giây trong cả lúc Khám Phá lẫn lúc Đánh Boss).
     /// </summary>
     public class GameManager : MonoBehaviour
     {
@@ -39,6 +40,7 @@ namespace VoxelSouls.Core
         public string bannerSubtitle = "";
         public Color bannerColor = Color.white;
         public float bannerAlpha = 0f;
+        public float bannerHoldTimer = 0f;
 
         private Coroutine _timeScaleCoroutine;
 
@@ -67,9 +69,17 @@ namespace VoxelSouls.Core
                 }
             }
 
-            if (bannerAlpha > 0f && currentState == GameState.Exploring)
+            // Tự động tắt bảng giới thiệu sau khi hiển thị xong (chỉ giữ cố định khi Thắng hoặc Thua)
+            if (bannerAlpha > 0f && (currentState == GameState.Exploring || currentState == GameState.BossFight))
             {
-                bannerAlpha = Mathf.Max(0f, bannerAlpha - Time.unscaledDeltaTime * 0.4f);
+                if (bannerHoldTimer > 0f)
+                {
+                    bannerHoldTimer -= Time.unscaledDeltaTime;
+                }
+                else
+                {
+                    bannerAlpha = Mathf.Max(0f, bannerAlpha - Time.unscaledDeltaTime * 1.35f);
+                }
             }
 
             // Phím khởi động lại nhanh khi Thắng hoặc Thua (Hoặc nhấn F5 bất kỳ lúc nào)
@@ -86,7 +96,6 @@ namespace VoxelSouls.Core
             if (currentState == GameState.Exploring)
             {
                 currentState = GameState.BossFight;
-                SpawnFloatingText(Vector3.zero, "", Color.clear); // giữ đồng bộ
             }
         }
 
@@ -98,6 +107,7 @@ namespace VoxelSouls.Core
             bannerSubtitle = "ĐÃ HẠ GỤC HỘ VỆ HẮC THẠCH — Nhấn [ENTER] hoặc [F5] để chơi lại";
             bannerColor = new Color(1f, 0.82f, 0.25f);
             bannerAlpha = 1f;
+            bannerHoldTimer = 999f;
             TriggerHitStop(0.25f, 0.18f);
         }
 
@@ -109,20 +119,26 @@ namespace VoxelSouls.Core
             bannerSubtitle = "DŨNG SĨ ĐÃ GỤC NGÃ — Nhấn [ENTER] hoặc [F5] để hồi sinh tại Điểm Ân Điển";
             bannerColor = new Color(0.88f, 0.15f, 0.15f);
             bannerAlpha = 1f;
+            bannerHoldTimer = 999f;
             TriggerHitStop(0.3f, 0.2f);
         }
 
-        public void ShowAreaBanner(string title, string subtitle, Color color)
+        public void ShowAreaBanner(string title, string subtitle, Color color, float holdDuration = 1.8f)
         {
             bannerTitle = title;
             bannerSubtitle = subtitle;
             bannerColor = color;
             bannerAlpha = 1f;
+            bannerHoldTimer = holdDuration;
         }
 
-        public void SpawnFloatingText(Vector3 worldPos, string text, Color color, int fontSize = 16, float duration = 1.1f)
+        public void SpawnFloatingText(Vector3 worldPos, string text, Color color, int fontSize = 16, float duration = 1.0f)
         {
             if (string.IsNullOrEmpty(text)) return;
+            if (activePopups.Count > 12)
+            {
+                activePopups.RemoveAt(0);
+            }
             activePopups.Add(new FloatingPopup
             {
                 worldPosition = worldPos + new Vector3(Random.Range(-0.25f, 0.25f), 0.3f, Random.Range(-0.25f, 0.25f)),

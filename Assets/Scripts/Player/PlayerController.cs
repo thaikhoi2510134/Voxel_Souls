@@ -6,20 +6,20 @@ using VoxelSouls.Visuals;
 namespace VoxelSouls.Player
 {
     /// <summary>
-    /// Điều khiển Dũng Sĩ góc nhìn từ trên xuống (Top-Down Action RPG):
-    /// - Di chuyển WASD theo góc nhìn Camera
-    /// - Chạy nhanh (Giữ Left Shift)
-    /// - Nhảy (Space) — có thể nhảy qua đòn Quét Hiểm Cảnh (危) của Boss và bấm Space lần 2 trên không để Đạp Đầu Phá Thế (Sekiro Jump Counter!)
+    /// Điều khiển Dũng Sĩ Góc Nhìn Thứ Ba (Third-Person Action RPG chuẩn Sekiro & Elden Ring):
+    /// - Di chuyển WASD theo hướng góc nhìn Camera thứ ba
+    /// - Khi bật Lock-On (Tab / Chuột Giữa): Luôn hướng mặt về phía Boss để sẵn sàng Parry và né đòn
+    /// - Khi tắt Lock-On: Nhân vật tự động xoay mặt mượt mà theo hướng chạy (WASD) hoặc hướng Camera khi vung kiếm
+    /// - Nhảy (Space) & Đạp Đầu Phá Thế trên không (Sekiro Jump Kick Counter)
     /// - Lộn nhào né đòn có i-frames (Phím V / Left Alt / Left Ctrl)
-    /// - Khóa mục tiêu Lock-On vào Boss (Phím Tab hoặc Chuột Giữa)
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(CombatStats))]
     public class PlayerController : MonoBehaviour
     {
         [Header("Movement Settings")]
-        public float walkSpeed = 6.2f;
-        public float sprintSpeed = 9.6f;
+        public float walkSpeed = 6.4f;
+        public float sprintSpeed = 9.8f;
         public float rollSpeed = 13.5f;
         public float rollDuration = 0.36f;
         public float rotationSpeed = 16f;
@@ -41,6 +41,7 @@ namespace VoxelSouls.Player
         private bool _isRolling;
         private float _rollTimer;
         private Vector3 _rollDirection;
+        private Vector3 _lastMoveInput;
 
         public bool IsGrounded => _cc != null && _cc.isGrounded;
         public bool IsRolling => _isRolling;
@@ -73,7 +74,7 @@ namespace VoxelSouls.Player
 
             if (lockOnTarget == null)
             {
-                Boss.BossController boss = FindFirstObjectByType<Boss.BossController>();
+                Boss.BossController boss = FindObjectOfType<Boss.BossController>();
                 if (boss != null)
                     lockOnTarget = boss.transform;
             }
@@ -94,7 +95,7 @@ namespace VoxelSouls.Player
                 {
                     GameManager.Instance.SpawnFloatingText(
                         transform.position + Vector3.up * 2.2f,
-                        isLockedOn ? "LOCK-ON: BẬT" : "LOCK-ON: TẮT",
+                        isLockedOn ? "LOCK-ON: KHÓA MỤC TIÊU BOSS" : "LOCK-ON: GÓC NHÌN TỰ DO",
                         Color.cyan, 14, 0.8f);
                 }
             }
@@ -149,6 +150,7 @@ namespace VoxelSouls.Player
             }
 
             Vector3 moveInput = GetCameraRelativeInput();
+            _lastMoveInput = moveInput;
             bool isSprinting = Input.GetKey(KeyCode.LeftShift) && moveInput.sqrMagnitude > 0.1f && !_combat.IsBlockingOrParrying;
 
             float speed = walkSpeed;
@@ -186,7 +188,7 @@ namespace VoxelSouls.Player
                         new Vector3(transform.position.x, 0f, transform.position.z),
                         new Vector3(lockOnTarget.position.x, 0f, lockOnTarget.position.z));
 
-                    if (distToBoss <= 4.2f)
+                    if (distToBoss <= 4.5f)
                     {
                         hasUsedJumpKick = true;
                         _verticalVelocity.y = jumpForce * 0.85f;
@@ -198,7 +200,7 @@ namespace VoxelSouls.Player
                             GameManager.Instance?.SpawnFloatingText(
                                 boss.transform.position + Vector3.up * 3.5f,
                                 boss.IsDoingPerilousSweep ? "ĐẠP PHÁ HIỂM CẢNH! (+48 THẾ)" : "ĐẠP PHÁ THẾ!",
-                                new Color(1f, 0.85f, 0.2f), 18, 1.2f);
+                                new Color(1f, 0.85f, 0.2f), 18, 1.1f);
                             GameManager.Instance?.SpawnVoxelBurst(transform.position, new Color(1f, 0.85f, 0.25f), 16, 7f, 0.14f);
                             GameManager.Instance?.TriggerHitStop(0.15f, 0.09f);
                         }
@@ -219,11 +221,11 @@ namespace VoxelSouls.Player
         {
             if (_isRolling || _stats.isPostureBroken) return;
 
-            // Khi bật Lock-On và Boss còn sống, Dũng Sĩ luôn hướng mặt về phía Boss hoặc hướng chuột khi đánh
+            // 1. Khi bật Lock-On và đang ở trong phạm vi chiến đấu với Boss -> Luôn hướng mặt về phía Boss
             if (isLockedOn && lockOnTarget != null)
             {
                 Boss.BossController boss = lockOnTarget.GetComponent<Boss.BossController>();
-                if (boss != null && !boss.Stats.IsDead && Vector3.Distance(transform.position, lockOnTarget.position) < 28f)
+                if (boss != null && !boss.Stats.IsDead && Vector3.Distance(transform.position, lockOnTarget.position) < 32f)
                 {
                     Vector3 dirToBoss = lockOnTarget.position - transform.position;
                     dirToBoss.y = 0f;
@@ -236,23 +238,24 @@ namespace VoxelSouls.Player
                 }
             }
 
-            // Xoay theo hướng chuột trên mặt phẳng mặt đất (Raycasting từ Camera)
+            // 2. Ở góc nhìn thứ ba tự do: Khi đang tấn công hoặc đỡ đòn, xoay theo hướng nhìn của Camera
             UnityEngine.Camera cam = UnityEngine.Camera.main;
-            if (cam != null)
+            if (_combat != null && (_combat.IsAttacking || _combat.IsBlockingOrParrying) && cam != null)
             {
-                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-                Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
-                if (groundPlane.Raycast(ray, out float enter))
+                Vector3 camForward = cam.transform.forward;
+                camForward.y = 0f;
+                if (camForward.sqrMagnitude > 0.01f)
                 {
-                    Vector3 hitPoint = ray.GetPoint(enter);
-                    Vector3 lookDir = hitPoint - transform.position;
-                    lookDir.y = 0f;
-                    if (lookDir.sqrMagnitude > 0.15f)
-                    {
-                        Quaternion targetRot = Quaternion.LookRotation(lookDir.normalized);
-                        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
-                    }
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(camForward.normalized), rotationSpeed * 1.4f * Time.deltaTime);
+                    return;
                 }
+            }
+
+            // 3. Khi chạy tự do: Xoay mặt mượt mà theo hướng di chuyển WASD (chuẩn Elden Ring / Sekiro)
+            if (_lastMoveInput.sqrMagnitude > 0.02f)
+            {
+                Quaternion moveRot = Quaternion.LookRotation(_lastMoveInput.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, moveRot, rotationSpeed * Time.deltaTime);
             }
         }
 
